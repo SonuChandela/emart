@@ -1,0 +1,11 @@
+:root {
+    --section-heading-color: #000;
+    --section-heading-font-family: 'Poppins', sans-serif;
+    --section-heading-font-size: 48px;
+    --section-heading-font-weight: 600;
+
+    --section-subheading-color: #000;
+    --section-subheading-font-family: 'Poppins', sans-serif;
+    --section-subheading-font-size: 16px;
+    --section-subheading-font-weight: 400;
+}
