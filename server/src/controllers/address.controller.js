@@ -1,68 +1,95 @@
+import mongoose from "mongoose";
 import { Address } from "../models/address.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const addAddress = asyncHandler(async(req,res) => {
-    const {userId,street,city,state,postalCode,country} = req.body;
+// add address 
+const addAddress = asyncHandler(async (req, res) => {
+    const { userId, street, city, state, postalCode, country } = req.body;
 
-    if(!userId ||  !street || !postalCode || !state || !country ){
-        throw new ApiError(400,'fill require fileds of address');
+    if (!userId || !street || !postalCode || !state || !country) {
+        throw new ApiError(400, 'fill require fileds of address');
     }
 
     const address = new Address({
-        userId,street,city,state,postalCode,country
+        userId, street, city, state, postalCode, country
     });
 
-   await address.save();
+    await address.save();
 
-    if(!address){
-        throw new ApiError(500,'Something wrong unable to add address.');
+    if (!address) {
+        throw new ApiError(500, 'Something wrong unable to add address.');
     }
 
     return res.status(200).json(
-        new ApiResponse(200,address,'Address added Sucessfully')
+        new ApiResponse(200, address, 'Address added Sucessfully')
     )
 });
 
-const updateAddress = asyncHandler( async(req,res)=>{
+// get address by id
+const getAddressByUserId = asyncHandler(async (req, res) => {
 
-    const {id} = req.params;
+    const { userId } = req.params;
 
-    const updatedAddr = {...req.body};
+    const userIdObj = new mongoose.Types.ObjectId(userId);
 
-    if(!id){
-        throw new ApiError(400,'Please define address id. Id is require field.')
-    }
+    const addressByUserId = await Address.aggregate([
+        {
+            $match: { userId: userIdObj }
+        }
+    ]);
 
-    const address = await Address.findByIdAndUpdate(id,updatedAddr,{new:true});
-
-    if(!address){
-        throw new ApiError(500,'unable to update data. please try again after some time.')
+    if (!addressByUserId) {
+        throw new ApiError(500, "Uable to fetch address. Try again later.")
     }
 
     return res.status(200).json(
-        new ApiResponse(200,address,'Address updated suncessfully.')
+        new ApiResponse(200, addressByUserId, 'Address fetch sucessfully.')
+    )
+
+});
+
+// update address
+const updateAddress = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+
+    const updatedAddr = { ...req.body };
+
+    if (!id) {
+        throw new ApiError(400, 'Please define address id. Id is require field.')
+    }
+
+    const address = await Address.findByIdAndUpdate(id, updatedAddr, { new: true });
+
+    if (!address) {
+        throw new ApiError(500, 'unable to update data. please try again after some time.')
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, address, 'Address updated sucessfully.')
     )
 });
 
-const deleteAddressById = asyncHandler(async(req,res)=>{
+// delete address by id
+const deleteAddressById = asyncHandler(async (req, res) => {
 
-    const {id} = req.params;
+    const { id } = req.params;
 
-    if(!id){
-        throw new ApiError(400,'Please define address id. Id is require field.')
+    if (!id) {
+        throw new ApiError(400, 'Please define address id. Id is require field.')
     }
 
     const address = await Address.findByIdAndDelete(id);
 
-    if(!address){
-        throw new ApiError(500,'unable to delete data. please try again after some time.')
+    if (!address) {
+        throw new ApiError(500, 'unable to delete data. please try again after some time.')
     }
 
     return res.status(200).json(
-        new ApiResponse(200,address,'Address deleted suncessfully.')
+        new ApiResponse(200, address, 'Address deleted suncessfully.')
     )
 })
 
-export {addAddress,updateAddress,deleteAddressById};
+export { addAddress, getAddressByUserId, updateAddress, deleteAddressById };

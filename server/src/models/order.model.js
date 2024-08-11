@@ -6,7 +6,7 @@ const orderSchema = new Schema(
             type: String,
             required: true,
             unique: true
-          },
+        },
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -36,37 +36,37 @@ const orderSchema = new Schema(
         },
         status: {
             type: String,
-            enum: ['Confirm', 'Processing', 'Shipped', 'Delivered','Pending', 'Cancelled', 'Returned', 'Refunded'],
+            enum: ['confirm', 'processing', 'shipped', 'delivered', 'pending', 'cancelled', 'returned', 'refunded'],
             default: 'Pending',
             required: true
         },
-        totalAmount:{
-            type:Number
+        totalAmount: {
+            type: Number
         },
         items: [
             {
-                product:{
-                type:mongoose.Schema.Types.ObjectId,
-                ref:'Product'
+                product: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Product'
                 },
-                variation:{
-                type:mongoose.Schema.Types.ObjectId,
-                ref:'ProductVariation'
+                variation: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'ProductVariation'
                 },
                 quantity: {
-                type: Number,
-                required: true
+                    type: Number,
+                    required: true
                 },
                 price: {
-                type: Number,
-                required: true
+                    type: Number,
+                    required: true
                 }
-        }
-    ]
+            }
+        ]
     },
     {
-        timestamps: true 
-      }
+        timestamps: true
+    }
 
 )
 

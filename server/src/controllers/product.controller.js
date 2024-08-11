@@ -185,5 +185,6 @@ export {
     addProduct,
     updateProduct,
     deleteProductById,
-    deleteMultipleProducts
+    deleteMultipleProducts,
+    
 }

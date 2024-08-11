@@ -1,7 +1,7 @@
 import mongoose, { Mongoose, Schema } from "mongoose";
 
 const userRoleSchema = new Schema({
-    role_name: {
+    name: {
         type: String,
         enum: ['admin', 'vendor', 'customer']
     }

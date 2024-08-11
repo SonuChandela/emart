@@ -1,6 +1,6 @@
 import { Product } from "../models/product.model.js";
 import { VariationValue } from "../models/variationValue.model.js";
-import { ProductVariation } from "../models/productVariation.model.js";
+import { ProductVariation } from "../models/productvariation.model.js";
 import { VariationType } from "../models/variationType.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -47,10 +47,26 @@ const processNewImages = async (image, name) => {
 // create new product variation 
 const createProductVariation = asyncHandler(async (req, res) => {
 
-    const { productId, variationType, variationValue, price, stock } = req.body;
+    let { productId, variationType, variationValue, price, stock } = req.body;
 
     if (!productId || !variationType || !variationValue || !price || !stock) {
         throw new ApiError(400, 'productId, variationType, variationValue , price and stock are required fields.');
+    }
+
+    // check product variation exist 
+    const productVariationExist = await ProductVariation.findOne({
+        productId: productId,
+        variationType: variationType,
+        options: {
+            $elemMatch: {
+                variationValue: variationValue
+            }
+        }
+    });
+
+    if (productVariationExist) {
+        // if variation value exist give error 
+        throw new ApiError(409, 'Variation value already exist in product variation.')
     }
 
     const product = await Product.findById(productId);
@@ -71,7 +87,7 @@ const createProductVariation = asyncHandler(async (req, res) => {
 
     const urlSlug = generateSlug(name);
 
-    const images = [];
+    let images = [];
     if (req.files?.images) {
         for (const image of req.files.images) {
             images.push(await moveAndRenameFile(image, name));
@@ -104,8 +120,26 @@ const createProductVariation = asyncHandler(async (req, res) => {
 });
 
 // get product varitions list 
-const getProductVariations = asyncHandler(async (req, res) => {
+const getOptionById = asyncHandler(async (req, res) => {
+    const { productId, variationType, optionId } = req.body;
 
+    const variation = await ProductVariation.findOne({
+        productId: productId,
+        variationType: variationType,
+        options: {
+            $elemMatch: {
+                _id: optionId
+            }
+        }
+    });
+
+    return res.status(200).json(
+        new ApiResponse(200, variation, 'Product variation fetch sucessfully.')
+    );
+});
+
+
+const getProductVariations = asyncHandler(async (req, res) => {
     const productVariations = await ProductVariation.aggregate([
         {
             $lookup: {
@@ -182,16 +216,16 @@ const getProductVariations = asyncHandler(async (req, res) => {
 });
 
 
-
 // get variation by id 
+
 const getProductVariationById = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const idObjectId = new mongoose.Types.ObjectId(id);
+    const objectId = new mongoose.Types.ObjectId(id);
 
     const variationById = await ProductVariation.aggregate([
         {
             $match: {
-                _id: idObjectId
+                _id: objectId
             }
         },
         {
@@ -260,7 +294,7 @@ const updateProductVariation = asyncHandler(async (req, res) => {
 
     const { id } = req.params;
     const updateFields = { ...req.body };
-    const { productId, variationType, ...optionFields } = updateFields;
+    const { productId, variationType, optionId, ...optionFields } = updateFields;
 
     if (!productId || !productId || !optionFields.variationValue) {
         throw new ApiError(400, "Product ID , variation Type and Value are required Fields.")
@@ -272,6 +306,8 @@ const updateProductVariation = asyncHandler(async (req, res) => {
     }
 
     const dbexistingOptions = productVariation.options;
+    const testOptions = productVariation.options.find(option => option._id.equals(optionId));
+    console.log(testOptions);
     const dbExistingImages = productVariation.options[0].images;
 
     if (!optionFields.name) {
@@ -310,7 +346,7 @@ const updateProductVariation = asyncHandler(async (req, res) => {
     const imageMap = new Map(lastOption.images.map(img => [img._id.toString(), img]));
 
     // merged images of lastOption map and newImage 
-    cloudUploadedImages.forEach(newImage => {
+    cloudUploadedImages?.forEach(newImage => {
 
         const imageId = newImage?._id?.toString() || new mongoose.Types.ObjectId().toString();
         (newImage?._id) ? imageMap.set(imageId, { ...newImage, _id: imageId }) : imageMap.set(imageId, { ...newImage });
@@ -336,6 +372,10 @@ const updateProductVariation = asyncHandler(async (req, res) => {
     }
 
     const updatedProductVariation = await ProductVariation.findByIdAndUpdate(id, updatedFields, { new: true });
+
+    if (!updatedProductVariation) {
+
+    }
 
     return res.status(200).json(
         new ApiResponse(200, updatedProductVariation, 'Product variation data updated sucessfully.')
@@ -365,5 +405,6 @@ export {
     getProductVariations,
     getProductVariationById,
     updateProductVariation,
-    deleteProductVariation
+    deleteProductVariation,
+    getOptionById
 }

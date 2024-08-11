@@ -43,7 +43,13 @@ const productSchema = new Schema({
     },
     salesPrice: {
         type: Number
-    }
+    },
+    variations: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'ProductVariation',
+        }
+    ],
 }, {
     timestamps: true
 })

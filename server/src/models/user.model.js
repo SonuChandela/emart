@@ -4,10 +4,9 @@ import bcrypt from "bcrypt"
 
 const userSchema = new Schema(
     {
-        user_role: {
+        userType: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'UserRole',
-            default: 'customer'
         },
         name: {
             type: String,
